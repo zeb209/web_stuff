@@ -1,3 +1,6 @@
+///====================================== TSContSchedule.cc =================///
+/// A helper class used to test the API's exposed by Apache Traffic Server.
+
 #include <netinet/in.h>
 #include <cassert>
 #include <cstdlib>
@@ -8,6 +11,11 @@
 #include <iostream>
 #include <ts/ts.h>
 #include <ink_defs.h>
+
+// Status code for transactions.
+static const int TXN_SUCCESS = 10000;
+static const int TXN_FAILURE = 10001;
+static const int TXN_TIMEOUT = 10002;
 
 extern void *plugin_http_accept;
 
@@ -28,7 +36,7 @@ struct RefreshContData {
 };
 
 static int handleFetchEvents(TSCont cont, TSEvent event, void *edata) {
-  if (event == 10000) { // success.
+  if (event == TXN_SUCCESS) { // success.
     TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
     int dataLen = 0; // The length of fetched data.
     // Get the starting position of fetched data.
@@ -53,9 +61,9 @@ static int handleFetchEvents(TSCont cont, TSEvent event, void *edata) {
     TSHandleMLocRelease(buf, 0, hdrLoc);
     TSMBufferDestroy(buf);
     TSHttpParserDestroy(parser);
-  } else if (event == 10001) { // failure.
+  } else if (event == TXN_FAILURE) { // failure.
     std::cout << "HTTP GET failure";
-  } else if (event == 10002) { // timeout
+  } else if (event == TXN_TIMEOUT) { // timeout
     std::cout << "HTTP GET timeout";
   } else {
     std::cout << "Unrecognized status";
@@ -63,7 +71,7 @@ static int handleFetchEvents(TSCont cont, TSEvent event, void *edata) {
   return 0;
 }
 
-// Initialize the sockaddr_in with the target address.
+// Initialize the sockaddr_in with the target address and port.
 int initializeSockaddr(const char *ip, int port, struct sockaddr_in *addr) {
   if (inet_aton(ip, &addr->sin_addr) == 0) {
     std::cout << "Invalid IP address\n";
@@ -86,9 +94,9 @@ void fetchHttpUrl(const std::string &url) {
   TSCont fetchCont = TSContCreate(handleFetchEvents, TSMutexCreate());
 
   TSFetchEvent eventIds;
-  eventIds.success_event_id = 10000;
-  eventIds.failure_event_id = 10001;
-  eventIds.timeout_event_id = 10002;
+  eventIds.success_event_id = TXN_SUCCESS;
+  eventIds.failure_event_id = TXN_FAILURE;
+  eventIds.timeout_event_id = TXN_TIMEOUT;
 
   struct sockaddr_in addr;
   //if (initializeSockaddr("172.20.200.150", 10126 /* port number*/, &addr) != 0) {
@@ -165,10 +173,84 @@ private:
   bool refreshInProgress;
 };
 
-void TSPluginInit(int argc, const char *argv[]) {
-  AutoAsyncRefresher *refresher = new AutoAsyncRefresher("/home/bzeng/web/ATS_plugins/test/backup.data",
-                                                         "http://eat1-app533.stg.linkedin.com:10126/bwl-ds/rest/getbwl?name=CIPL");
-                                                         //"http://eat1-app533.stg.linkedin.com:10126/bwl-ds/rest/getbwl?name=CWLP&type=current");
-                                                         //"www.google.com");
+void testAutoAsyncRefresher() {
+  AutoAsyncRefresher *refresher = new AutoAsyncRefresher("/home/bzeng/web/ATS_plugins/test/backup.data" /* backup path */,
+                                                         "http://eat1-app533.stg.linkedin.com:10126/bwl-ds/rest/getbwl?name=CIPL" /* URL for the object*/);
+  //"http://eat1-app533.stg.linkedin.com:10126/bwl-ds/rest/getbwl?name=CWLP&type=current");
+  //"www.google.com");
   (void) refresher;
+}
+
+
+///==========================================================================///
+enum HOOK_TYPE { READ_RESPONSE, SEND_RESPONSE };
+
+// A dummy transaction hook for testing whether a transaction hook will be hit
+// if the transaction is enabled with TSHttpTxnReenable(txn, TS_EVENT_HTTP_ERROR).
+static int transactionCont(TSCont cont, TSEvent event, void *edata) {
+  TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
+  int * contData = static_cast<int *>(TSContDataGet(cont));
+  switch (*contData) {
+  case READ_RESPONSE: std::cout << "transactionCont: read response \n"; break;
+  case SEND_RESPONSE: std::cout << "transactionCont: send response \n"; break;
+  default: std::cout << "Other hooks\n";
+  }
+
+  delete contData;
+  // You need to destroy the continuation.
+  TSContDestroy(cont);
+
+  TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  return 0;
+}
+
+// Test whether a transaction still hits handleReadResponseHeader after it is
+// called with TSHttpTxnReenable(txn, TS_EVENT_HTTP_ERROR).
+static int handleReadRequestHeader(TSCont cont, TSEvent event, void *edata) {
+  TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
+  // Internal requests, do nothing.
+  if (TSHttpIsInternalRequest(txn) == TS_SUCCESS) {
+    TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+    return 0;
+  }
+
+  // Schedule a continuation at read response header.
+  TSCont readResponseCont = TSContCreate(transactionCont, 0);
+  int *contData = new int(READ_RESPONSE);
+  TSContDataSet(readResponseCont, contData);
+  TSHttpTxnHookAdd(txn, TS_HTTP_READ_RESPONSE_HDR_HOOK, readResponseCont);
+
+  // Schedule a continuation at send response header.
+  TSCont sendResponseCont = TSContCreate(transactionCont, 0);
+  int * data = new int(SEND_RESPONSE);
+  TSContDataSet(sendResponseCont, data);
+  TSHttpTxnHookAdd(txn, TS_HTTP_SEND_RESPONSE_HDR_HOOK, sendResponseCont);
+
+
+  // Reenable with TS_EVENT_HTTP_ERROR.
+  // TSHttpTxnReenable(txn, TS_EVENT_HTTP_ERROR);
+  TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  return 0;
+}
+
+void startTestCont() {
+  TSCont cont = TSContCreate(handleReadRequestHeader, 0);
+  TSHttpHookAdd(TS_HTTP_READ_REQUEST_HDR_HOOK, cont);
+}
+
+///==========================================================================///
+
+void TSPluginInit(int argc, const char *argv[]) {
+  // Register this plugin first. This is necessary since 5.2. Otherwise, ATS
+  // will crash during the event handler.
+  TSPluginRegistrationInfo info;
+  info.plugin_name = (char *)"TSContSchedule";
+  info.vendor_name = (char *)"LinkedIn Inc.";
+  info.support_email = (char *)"bzeng@linkedin.com";
+  if (!TSPluginRegister(TS_SDK_VERSION_2_0, &info)) {
+    TSError("Plugin registration failed. \n");
+  }
+
+  startTestCont();
+  //testAutoAsyncRefresher();
 }
