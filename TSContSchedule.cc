@@ -68,6 +68,9 @@ static int handleFetchEvents(TSCont cont, TSEvent event, void *edata) {
   } else {
     std::cout << "Unrecognized status";
   }
+
+  // Delete the continuation data and destroy the continuation here.
+  TSContDestroy(cont);
   return 0;
 }
 
