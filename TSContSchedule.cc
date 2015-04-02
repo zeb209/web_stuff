@@ -185,12 +185,20 @@ void testAutoAsyncRefresher() {
 ///==========================================================================///
 enum HOOK_TYPE { READ_RESPONSE, SEND_RESPONSE };
 
+class PrintDtor {
+  HOOK_TYPE Member;
+public:
+  int member() { return Member; }
+  PrintDtor(HOOK_TYPE hookType) : Member(hookType) {}
+  ~PrintDtor() { std::cout << "~PrintDtor\n"; }
+};
+
 // A dummy transaction hook for testing whether a transaction hook will be hit
 // if the transaction is enabled with TSHttpTxnReenable(txn, TS_EVENT_HTTP_ERROR).
 static int transactionCont(TSCont cont, TSEvent event, void *edata) {
   TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
-  int * contData = static_cast<int *>(TSContDataGet(cont));
-  switch (*contData) {
+  PrintDtor *contData = static_cast<PrintDtor *>(TSContDataGet(cont));
+  switch (contData->member()) {
   case READ_RESPONSE: std::cout << "transactionCont: read response \n"; break;
   case SEND_RESPONSE: std::cout << "transactionCont: send response \n"; break;
   default: std::cout << "Other hooks\n";
@@ -216,20 +224,20 @@ static int handleReadRequestHeader(TSCont cont, TSEvent event, void *edata) {
 
   // Schedule a continuation at read response header.
   TSCont readResponseCont = TSContCreate(transactionCont, 0);
-  int *contData = new int(READ_RESPONSE);
+  PrintDtor *contData = new PrintDtor(READ_RESPONSE);
   TSContDataSet(readResponseCont, contData);
   TSHttpTxnHookAdd(txn, TS_HTTP_READ_RESPONSE_HDR_HOOK, readResponseCont);
 
   // Schedule a continuation at send response header.
   TSCont sendResponseCont = TSContCreate(transactionCont, 0);
-  int * data = new int(SEND_RESPONSE);
+  PrintDtor * data = new PrintDtor(SEND_RESPONSE);
   TSContDataSet(sendResponseCont, data);
   TSHttpTxnHookAdd(txn, TS_HTTP_SEND_RESPONSE_HDR_HOOK, sendResponseCont);
 
 
   // Reenable with TS_EVENT_HTTP_ERROR.
-  // TSHttpTxnReenable(txn, TS_EVENT_HTTP_ERROR);
-  TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
+  TSHttpTxnReenable(txn, TS_EVENT_HTTP_ERROR);
+  // TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
   return 0;
 }
 
