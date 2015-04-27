@@ -1,15 +1,9 @@
-CC=gcc
-CXX=g++
+SUBDIR=ats go misc
 
-API=/home/bzeng/web/ATS/LNKD-trafficserver/li-trafficserver/proxy/api/
-TS=/home/bzeng/web/ATS/LNKD-trafficserver/li-trafficserver/lib/ts
-B_TS=/home/bzeng/web/ATS/LNKD-trafficserver/build/lib/ts
-
-CXXFLAGS= -I$(API) -I$(TS) -I$(B_TS) -Wall -Werror -g
-
-Target=TSContSchedule.so epoll-example
-
-all: $(Target)
+all:
+	make -C ats
+	make -C go
+	make -C misc
 
 %.so : %.cc
 	$(CXX) $(CXXFLAGS) -fPIC -pthread -shared $< -o $@
@@ -17,6 +11,9 @@ all: $(Target)
 %: %.c
 	$(CC) $< -o $@
 
-.phony: clean
+.phony: clean $(SUBDIR)
 clean:
 	-rm -rf $(Target) *~
+	make clean -C ats
+	make clean -C go
+	make clean -C misc
