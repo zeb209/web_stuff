@@ -1,7 +1,7 @@
 This directory contains some side projects zeb209 has worked on. All the programs
 under web_stuff adopts the Pasteleft license described in LICENSE file.
 Here is the structure:
-  -- PasteLeft, the license file.
+  -- LICENSE, the pasteleft license file.
   -- README, this file.
   -- go, some programs I wrote in golang.
   -- ats, programs related to Apache Traffic Server.
