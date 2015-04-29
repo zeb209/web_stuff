@@ -1,3 +1,7 @@
+// Copyright 2015 zeb209. All rights reserved.
+// Use of this source code is governed by a Pastleft
+// license that can be found in the LICENSE file.
+
 ///================================= createTransactionCont.cc ===============///
 /// Create a transaction continuation. This file exposes the bug with
 /// Expect:100-continue bug in the ATS core code.
@@ -6,7 +10,7 @@
 #include <ts/ts.h>
 
 namespace {
-  int handleReadResponseHeader(TSCont cont, TSEvent event, void *edata) {
+  int transactionHook(TSCont cont, TSEvent event, void *edata) {
     TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
 
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
@@ -23,8 +27,17 @@ namespace {
     }
 
     // Add a transaction continuation here.
-    TSCont delayCont = TSContCreate(handleReadResponseHeader, 0);
-    TSHttpTxnHookAdd(txn, TS_HTTP_READ_RESPONSE_HDR_HOOK, delayCont);
+    TSCont delayCont = TSContCreate(transactionHook, 0);
+    // TSHttpTxnHookAdd(txn, TS_HTTP_READ_REQUEST_HDR_HOOK, delayCont); // this is illegal.
+    // TSHttpTxnHookAdd(txn, TS_HTTP_OS_DNS_HOOK, delayCont); // does not go through HttpSM twice.
+    // TSHttpTxnHookAdd(txn, TS_HTTP_SEND_REQUEST_HDR_HOOK, delayCont); // does not go through HttpSM twice.
+    // TSHttpTxnHookAdd(txn, TS_HTTP_READ_CACHE_HDR_HOOK, delayCont); // does not go through HttpSM twice.
+    // TSHttpTxnHookAdd(txn, TS_HTTP_READ_RESPONSE_HDR_HOOK, delayCont); // yes, go through twice.
+    TSHttpTxnHookAdd(txn, TS_HTTP_SEND_RESPONSE_HDR_HOOK, delayCont); // does not go through HttpSM twice.
+    // TSHttpTxnHookAdd(txn, TS_HTTP_REQUEST_TRANSFORM_HOOK, delayCont); // does not go through HttpSM twice.
+    // TSHttpTxnHookAdd(txn, TS_HTTP_RESPONSE_TRANSFORM_HOOK, delayCont); // does not go through HttpSM twice.
+    // TSHttpTxnHookAdd(txn, TS_HTTP_TXN_CLOSE_HOOK, delayCont); // does not go through HttpSM twice.
+
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }
