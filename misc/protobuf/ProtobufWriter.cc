@@ -47,6 +47,7 @@ bool printVersionedData(const string &filename) {
   VersionedData downloadedData;
   if (!downloadedData.ParseFromString(contents))
     return false;
+  std::cout << "version: " << downloadedData.version() << "\n";
   std::cout << downloadedData.data();
   return true;
 }
