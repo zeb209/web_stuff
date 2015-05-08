@@ -5,9 +5,15 @@
 CC=gcc
 CXX=g++
 
+SUBDIR = protobuf
 Target=epoll-example
 
+
 all: $(Target)
+	for subdir in $(SUBDIR); do \
+            make -C $$subdir; \
+	done
+
 
 %: %.c
 	$(CC) $< -o $@
@@ -15,3 +21,6 @@ all: $(Target)
 .phony: clean
 clean:
 	-rm -rf $(Target) *~
+	for subdir in $(SUBDIR); do \
+            make clean -C $$subdir; \
+        done
