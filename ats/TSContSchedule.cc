@@ -136,7 +136,7 @@ public:
     refreshContData->periodicRefreshAction = TSContSchedule(refreshCont, 5000 /* ms */, TS_THREAD_POOL_DEFAULT);
   }
 
-  static int handleRefreshContEvent(TSCont cont, TSEvent event, void *edata) {
+  static int handleRefreshContEvent(TSCont cont, TSEvent event, void * /*edata*/) {
     assert(event == TS_EVENT_TIMEOUT || event == TS_EVENT_IMMEDIATE);
     RefreshContData *refreshContData = static_cast<RefreshContData *>(TSContDataGet(cont));
     refreshContData->refresher->refresh(refreshContData);
@@ -202,7 +202,7 @@ public:
 
 // A dummy transaction hook for testing whether a transaction hook will be hit
 // if the transaction is enabled with TSHttpTxnReenable(txn, TS_EVENT_HTTP_ERROR).
-static int transactionCont(TSCont cont, TSEvent event, void *edata) {
+static int transactionCont(TSCont cont, TSEvent /*event*/, void *edata) {
   TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
   PrintDtor *contData = static_cast<PrintDtor *>(TSContDataGet(cont));
   switch (contData->member()) {
@@ -221,7 +221,7 @@ static int transactionCont(TSCont cont, TSEvent event, void *edata) {
 
 // Test whether a transaction still hits handleReadResponseHeader after it is
 // called with TSHttpTxnReenable(txn, TS_EVENT_HTTP_ERROR).
-static int handleReadRequestHeader(TSCont cont, TSEvent event, void *edata) {
+static int handleReadRequestHeader(TSCont /*cont*/, TSEvent /*event*/, void *edata) {
   TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
   // Internal requests, do nothing.
   if (TSHttpIsInternalRequest(txn) == TS_SUCCESS) {
@@ -255,7 +255,7 @@ void startTestCont() {
 
 ///==========================================================================///
 
-void TSPluginInit(int argc, const char *argv[]) {
+void TSPluginInit(int /*argc*/, const char * /*argv*/[]) {
   // Register this plugin first. This is necessary since 5.2. Otherwise, ATS
   // will crash during the event handler.
   TSPluginRegistrationInfo info;

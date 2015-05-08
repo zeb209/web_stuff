@@ -10,7 +10,7 @@
 #include <ts/ts.h>
 
 namespace {
-  int transactionHook(TSCont cont, TSEvent event, void *edata) {
+  int transactionHook(TSCont cont, TSEvent /*event*/, void *edata) {
     TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
 
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
@@ -19,7 +19,7 @@ namespace {
     return 0;
   }
 
-  int handleReadRequestHeader(TSCont cont, TSEvent event, void *edata) {
+  int handleReadRequestHeader(TSCont /*cont*/, TSEvent /*event*/, void *edata) {
     TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
     if (TSHttpIsInternalRequest(txn) == TS_SUCCESS) {
       TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
@@ -44,7 +44,7 @@ namespace {
 
   // If it is a global continuation, then it cannot be destroyed. so the problem
   // is not triggered.
-  int handleReadResponseHeaderGlobal(TSCont cont, TSEvent event, void *edata) {
+  int handleReadResponseHeaderGlobal(TSCont /*cont*/, TSEvent /*event*/, void *edata) {
     TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
 
     if (TSHttpIsInternalRequest(txn) == TS_SUCCESS) {
@@ -57,7 +57,7 @@ namespace {
   }
 }
 
-void TSPluginInit(int argc, const char *argv[]) {
+void TSPluginInit(int /*argc*/, const char */*argv*/[]) {
   TSPluginRegistrationInfo info;
 
   info.plugin_name   = (char *)"createTransactionCont";
