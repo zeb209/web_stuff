@@ -2,6 +2,9 @@
 # Use of this source code is governed by a Pastleft
 # license that can be found in the LICENSE file.
 
+# Hardcode the parallel build flags here.
+MAKEFLAGS=-j 4
+
 SUBDIR=ats go misc
 
 all: $(SUBDIR)
