@@ -19,4 +19,3 @@ $(SUBDIR)::
 
 clean: $(SUBDIR)
 	-rm -rf *~
-
