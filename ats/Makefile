@@ -11,7 +11,7 @@ B_TS=/home/bzeng/web/ATS/LNKD-trafficserver/build/lib/ts
 
 CXXFLAGS= -I$(API) -I$(TS) -I$(B_TS) -Wall -Werror -g -Wno-deprecated -Wextra
 
-Target=TSContSchedule.so createTransactionCont.so
+Target=TSContSchedule.so createTransactionCont.so StartCorpIpFetcher.so
 
 all: $(Target)
 
