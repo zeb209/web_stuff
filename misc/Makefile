@@ -8,19 +8,15 @@ CXX=g++
 SUBDIR = protobuf
 Target=epoll-example
 
+all: $(Target) $(SUBDIR)
 
-all: $(Target)
-	for subdir in $(SUBDIR); do \
-            make -C $$subdir; \
-	done
-
+$(SUBDIR)::
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 
 %: %.c
 	$(CC) $< -o $@
 
 .phony: clean
-clean:
+
+clean: $(SUBDIR)
 	-rm -rf $(Target) *~
-	for subdir in $(SUBDIR); do \
-            make clean -C $$subdir; \
-        done

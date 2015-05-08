@@ -4,20 +4,15 @@
 
 SUBDIR=ats go misc
 
-all:
-	for subdir in $(SUBDIR); do \
-            make -C $$subdir; \
-	done
+all: $(SUBDIR)
 
-%.so : %.cc
-	$(CXX) $(CXXFLAGS) -fPIC -pthread -shared $< -o $@
+$(SUBDIR)::
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 
 %: %.c
 	$(CC) $< -o $@
 
-.phony: clean $(SUBDIR)
-clean:
+.phony: clean
+
+clean: $(SUBDIR)
 	-rm -rf *~
-	for subdir in $(SUBDIR); do \
-            make clean -C $$subdir; \
-        done
