@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "doc": "Represents a user's direct HTTP reuqest.",
+  "name": "RequestEvent",
+  "fields": [
+    {
+      "name": "header",
+      "doc": "Request header",
+      "type": [
+        "null", {
+          "type": "record",
+          "name": "EventHeader",
+          "namespace": "com.xxx.events",
+          "doc": "The basic header for every tracking event.",
+          "fields": [
+            {"name": "memberId", "type": "int",  "doc": "The member Id of a request."},
+            {"name": "time",     "type": "long", "doc": "The time of the event."}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "request",
+      "type": [ "null", "string" ],
+      "doc": "request body"
+    }
+  ]
+}
