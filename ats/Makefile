@@ -9,7 +9,7 @@ API=/home/bzeng/web/ATS/LNKD-trafficserver/li-trafficserver/proxy/api/
 TS=/home/bzeng/web/ATS/LNKD-trafficserver/li-trafficserver/lib/ts
 B_TS=/home/bzeng/web/ATS/LNKD-trafficserver/build/lib/ts
 
-CXXFLAGS= -I$(API) -I$(TS) -I$(B_TS) -Wall -Werror -g -Wno-deprecated -Wextra
+CXXFLAGS= -I$(API) -I$(TS) -I$(B_TS) -Wall -Werror -g -Wno-deprecated -Wextra -pedantic
 
 Target=TSContSchedule.so createTransactionCont.so StartCorpIpFetcher.so
 
