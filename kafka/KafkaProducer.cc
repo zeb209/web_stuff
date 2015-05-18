@@ -16,46 +16,14 @@
 
 #include "li_kafka.h"
 #include "KafkaProducer.h"
+#include "KafkaTopicSchema.h"
 #include "RequestEvent.h"
 
 #define LOG_TAG "requesteventproducer"
 
 namespace {
-  const std::string rest_proxy_url      = "http://tracking-rest-proxy/tracking-rest/kafka/topics";
-  const std::string schema_registry_url = "http://eat1-app110.stg.linkedin.com:10252/schemaRegistry/schemas";
-  const std::string REQUEST_EVENT_TOPIC = "RequestEvent";
-  const std::string REQUEST_EVENT_SCHEMA =
-    "{"
-    "  \"type\": \"record\","
-    "  \"doc\": \"Represents a user's direct HTTP reuqest.\","
-    "  \"name\": \"RequestEvent\","
-    "  \"fields\": ["
-    "    {"
-    "      \"name\": \"header\","
-    "      \"doc\": \"Request header\","
-    "      \"type\": ["
-    "        \"null\", {"
-    "          \"type\": \"record\","
-    "          \"name\": \"EventHeader\","
-    "          \"namespace\": \"com.xxx.events\","
-    "          \"doc\": \"The basic header for every tracking event.\","
-    "          \"fields\": ["
-    "            {\"name\": \"memberId\", \"type\": \"int\",  \"doc\": \"The member Id of a request.\"},"
-    "            {\"name\": \"time\",     \"type\": \"long\", \"doc\": \"The time of the event.\"}"
-    "          ]"
-    "        }"
-    "      ]"
-    "    },"
-    "    {"
-    "      \"name\": \"request\","
-    "      \"type\": [ \"null\", \"string\" ],"
-    "      \"doc\": \"request body\""
-    "    }"
-    "  ]"
-    "}";
-
   atscppapi::Logger logger;
-  KafkaProducer *kafka_rest;
+  KafkaProducer *kafka_rest = NULL;
 
   void kafka_logger(li_kafka_log_msg_level log_level, const char *err_msg) {
     switch(log_level) {
@@ -69,6 +37,44 @@ namespace {
       std::cout << "[kafka] " << err_msg << std::endl;
       break;
     }
+  }
+
+  // Register a kafka schema and get the schema_id.
+  KafkaProducer *createKafkaProducer(const std::string &proxyUrl /* kafka rest proxy url */,
+                                     const std::string &schemaRegistryUrl /* kafka schema registry url*/,
+                                     void (*klogger)(li_kafka_log_msg_level, const char *),
+                                     const std::string &topic /* kafka event topic */,
+                                     const std::string &schema /* the schema for the event */,
+                                     const std::string &logfile,
+                                     const unsigned buffer_size /* buffer queue size */) {
+    // In order to create a kafka producer, you need to create a kafka object.
+    li_kafka lik = li_kafka_init_rest(proxyUrl.c_str(), schemaRegistryUrl.c_str(),
+                                      klogger, LI_KAFKA_LOG_LEVEL_INFO);
+    if (lik == NULL) {
+      std::cerr << "Failed to initialize kafka\n";
+      return NULL;
+    }
+
+    // Register the schema with the topic and schema.
+    if (!li_kafka_register_schema(lik, topic.c_str(), schema.c_str())) {
+      std::cerr << "Failed to register schema";
+      return NULL;
+    }
+
+    // Get the schema ID. Try 10 times to see whether it still fails.
+    char schema_id[256];
+    int count = 10;
+    while (count-- > 0) {
+      if (li_kafka_get_schema_id(lik, topic.c_str(), schema_id, sizeof(schema_id)))
+        break;
+      usleep(100000/* micro seconds*/);
+    }
+
+    if (!schema_id[0]) {
+      std::cerr << "Failed to get schema ID\n";
+      return NULL;
+    }
+    return new KafkaProducer(proxyUrl, logfile, topic, schema_id, buffer_size);
   }
 }
 
@@ -97,32 +103,15 @@ public:
 };
 
 bool RequestEventProducer::initialize() {
-  // To create a kafka producer, you need to create a kafka object.
-  li_kafka lik = li_kafka_init_rest(rest_proxy_url.c_str(), schema_registry_url.c_str(),
-                                    kafka_logger, LI_KAFKA_LOG_LEVEL_INFO);
-  if (lik == NULL) {
-    LOG_ERROR2(logger, LOG_TAG, "Failed to initialize kafka");
-    return false;
-  }
-
-  // Register the schema with the topic and schema.
-  if (!li_kafka_register_schema(lik, REQUEST_EVENT_TOPIC.c_str(), REQUEST_EVENT_SCHEMA.c_str())) {
-    LOG_ERROR2(logger, LOG_TAG, "cannot register schema");
-    return false;
-  }
-
-  // Get the schema ID. Try 10 times to see whether it still fails.
-  char schema_id[256] = {0};
-  int count = 10;
-  while (count-- > 0) {
-    if (li_kafka_get_schema_id(lik, REQUEST_EVENT_TOPIC.c_str(), schema_id, sizeof(schema_id)))
-      break;
-    usleep(10000/* micro seconds*/);
-  }
-
   GlobalPlugin::registerHook(Plugin::HOOK_READ_REQUEST_HEADERS_PRE_REMAP);
-  kafka_rest = new KafkaProducer(rest_proxy_url, "requestevent-kafka.log", REQUEST_EVENT_TOPIC,
-                                 schema_id, 100 /* queue_size */);
+
+  kafka_rest = createKafkaProducer(rest_proxy_url, schema_registry_url, kafka_logger,
+                                   USER_REQUEST_EVENT_TOPIC, USER_REQUEST_EVENT_SCHEMA,
+                                   "requestevent-kafka.log", 100);
+  if (!kafka_rest) {
+    std::cerr << "Failed to create a Kafka producer\n";
+    return false;
+  }
 
   atscppapi::StatusProviderService::registerProvider(LOG_TAG, this);
   return true;
@@ -134,6 +123,7 @@ void RequestEventProducer::handleReadRequestHeadersPreRemap(atscppapi::Transacti
   // Create a transaction plugin here.
   if (requestHeaders.find("client_ip") != requestHeaders.end() || true)
     transaction.addPlugin(new TxnProducer(transaction));
+  transaction.resume();
 }
 
 void TSPluginInit(int argc, const char *argv[]) {

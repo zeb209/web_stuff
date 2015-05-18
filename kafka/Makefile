@@ -20,7 +20,7 @@ all: $(Target)
 %.h : %.avsc
 	avrogencpp -i $< -o $@
 
-%.so: %.cc $(LIKAFKA_PATH)/.libs/liblikafka.a $(KAFKA_PATH)/.libs/libkafka.a
+%.so: %.cc KafkaProducer.h KafkaTopicSchema.h RequestEvent.h $(LIKAFKA_PATH)/.libs/liblikafka.a $(KAFKA_PATH)/.libs/libkafka.a
 	$(CXX) $(CXXFLAGS) -g -fPIC -pthread -shared $< $(LIKAFKA_PATH)/.libs/liblikafka.a $(KAFKA_PATH)/.libs/libkafka.a -lavrocpp -lcurl -lli_atscppapi -o $@
 
 .phony: clean
