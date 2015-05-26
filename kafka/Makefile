@@ -19,6 +19,7 @@ all: $(Target)
 
 %.h : %.avsc
 	avrogencpp -i $< -o $@
+	sed -i ':a;N;$$!ba;s/,\n};/\n};/g' $@
 
 %.so: %.cc KafkaProducer.h KafkaTopicSchema.h RequestEvent.h $(LIKAFKA_PATH)/.libs/liblikafka.a $(KAFKA_PATH)/.libs/libkafka.a
 	$(CXX) $(CXXFLAGS) -g -fPIC -pthread -shared $< $(LIKAFKA_PATH)/.libs/liblikafka.a $(KAFKA_PATH)/.libs/libkafka.a -lavrocpp -lcurl -lli_atscppapi -o $@
