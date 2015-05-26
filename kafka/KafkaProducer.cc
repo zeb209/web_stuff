@@ -11,6 +11,7 @@
 #include <atscppapi/Logger.h>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <li_atscppapi/StatusProviderService.h>
 #include <string>
 
@@ -78,14 +79,39 @@ namespace {
   }
 }
 
+// Read a file into a string.
+bool readFileIntoStr(const std::string &filename, std::string &contents) {
+  std::ifstream input(filename.c_str());
+  if (!input.good()) return false;
+  // Get length of a file.
+  input.seekg(0, input.end);
+  size_t fileSize = input.tellg();
+  input.seekg(0, input.beg);
+
+  contents.resize(fileSize);
+  input.read(&contents[0], fileSize);
+  input.close();
+  return true;
+}
+
 class TxnProducer : public atscppapi::TransactionPlugin {
 public:
   TxnProducer(atscppapi::Transaction &txn) : TransactionPlugin(txn), transaction(txn) {
-    event_str += "TxnProducer constructor";
+    // event_str += "TxnProducer constructor";
   }
 
   ~TxnProducer() {
-    event_str += "TxnProducer destructor";
+    // This is not in the right schema. Receive 400 error.
+    // event_str += "TxnProducer destructor";
+
+    // This is a legal event string.
+    event_str = "{\"header\":null,\"request\":null,\"response\":null}";
+
+    // Read an event string from a file that contains the events in json.
+    // if (!readFileIntoStr(event_file, event_str)) {
+    //   std::cerr << "Failed to read the file: " << event_file << "\n";
+    //   event_str = EVENT_STR;
+    // }
     kafka_rest->sendEvent(event_str);
   }
 private:
@@ -107,7 +133,7 @@ bool RequestEventProducer::initialize() {
 
   kafka_rest = createKafkaProducer(rest_proxy_url, schema_registry_url, kafka_logger,
                                    USER_REQUEST_EVENT_TOPIC, USER_REQUEST_EVENT_SCHEMA,
-                                   "requestevent-kafka.log", 100);
+                                   "requestevent-kafka.log", 1);
   if (!kafka_rest) {
     std::cerr << "Failed to create a Kafka producer\n";
     return false;

@@ -1,10 +1,24 @@
+// Copyright 2015 zeb209. All rights reserved.
+// Use of this source code is governed by a Pastleft
+// license that can be found in the LICENSE file.
+
 #pragma once
-#ifndef KAFKA_TOPIC_SCHEMA
-#define KAFKA_TOPIC_SCHEMA
+#ifndef KAFKA_TOPIC_SCHEMA_H
+#define KAFKA_TOPIC_SCHEMA_H
 
 namespace {
-  const std::string rest_proxy_url       = "http://tracking-rest-proxy/tracking-rest/kafka/topics";
-  const std::string schema_registry_url  = "http://eat1-app110.stg.linkedin.com:10252/schemaRegistry/schemas";
+  const std::string event_file = "/home/bzeng/web/ATS_plugins/test/kafka/events.json";
+  // The rest end points for kafka cluster. The kafka events will be sent to this url.
+  // Do Not Forget to add the mapping rule from this url to the real url in remap.config.
+  // map    http://tracking-rest-proxy/tracking-rest/kafka/topics    http://eat1-kafkarest-vip-1.stg.linkedin.com:10532/tracking-rest/kafka/topics @action=allow @src_ip=127.0.0.1
+  // const std::string rest_proxy_url = "http://tracking-rest-proxy/tracking-rest/kafka/topics";
+
+  // For EI1. Add the mapping rule to itself in remap.config.
+  const std::string rest_proxy_url = "http://ei-tracking-rest-tracking-vip.stg.linkedin.com:10532/tracking-rest/kafka/topics";
+  // No mapping rule is needed for the schema registry url in remap.config. Strange!
+  const std::string schema_registry_url = "http://eat1-app110.stg.linkedin.com:10252/schemaRegistry/schemas";
+  // For EI1 Local.
+  // const std::string schema_registry_url = "http://eat1-schema-vip-z.stg.linkedin.com:10252/schemaRegistry/schemas";
   const std::string REQUEST_EVENT_TOPIC  = "RequestEvent";
   const std::string REQUEST_EVENT_SCHEMA =
     "{"
@@ -189,4 +203,5 @@ namespace {
     "}";
 
 }
+
 #endif

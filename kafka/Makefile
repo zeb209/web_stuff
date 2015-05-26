@@ -13,7 +13,7 @@ CXX=g++
 CXXFLAGS= -I$(API) -I$(TS) -I$(B_TS) -I$(KAFKA_PATH)/src/include -I$(LIKAFKA_PATH)/src/include \
   -std=c++0x -Wall -Werror -g -Wno-deprecated -Wextra -pedantic
 
-Target = RequestEvent.h KafkaProducer.so
+Target = RequestEvent.h RequestEventSchema.h KafkaProducer.so
 
 all: $(Target)
 

@@ -57,13 +57,16 @@ public:
     headers.set("Content-Type", "multipart/form-data");
     headers.set("charsets", "utf-8");
 
+    std::cout << url << "\n";
+    std::cout << post_body;
     atscppapi::Async::execute(this, http_fetch, atscppapi::shared_ptr<atscppapi::Mutex>());
   }
 
   virtual void handleAsyncComplete(atscppapi::AsyncHttpFetch &http_request) {
     if (http_request.getResult() == atscppapi::AsyncHttpFetch::RESULT_SUCCESS ||
         http_request.getResponse().getStatusCode() != 200) {
-      std::cerr << "POST request to Kafka failed!";
+      std::cerr << "POST request to Kafka failed with status code: "
+                << http_request.getResponse().getStatusCode() << "\n";
     }
   }
 

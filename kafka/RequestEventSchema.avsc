@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "doc": "Represents a user's direct HTTP reuqest.",
+  "name": "RequestEvent",
+  "fields": [
+    {
+      "name": "header",
+      "doc":  "Request header",
+      "type": "string"
+    }
+  ]
+}

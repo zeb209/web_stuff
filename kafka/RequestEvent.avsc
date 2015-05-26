@@ -1,12 +1,165 @@
 {
   "type": "record",
-  "doc": "Represents a user's direct HTTP reuqest.",
-  "name": "RequestEvent",
+  "doc": "Represents a user's direct HTTP request (not PAL or CDN etc.)",
+  "name": "UserRequestEvent",
+  "namespace": "com.linkedin.events",
   "fields": [
-    {
-      "name": "header",
-      "doc":  "Request header",
-      "type": "string"
-    }
+    {"name": "header", "type": [ "null", {
+      "type": "record",
+      "name": "EventHeader",
+      "namespace": "com.linkedin.events",
+      "doc":"The basic header for every tracking event.",
+      "fields" : [
+        {"name":"memberId", "type":"int",
+         "doc":"The LinkedIn member ID of the user initiating the action.  LinkedIn member IDs are integers greater than zero.  Guests are represented either as zero or a negative number."},
+        {"name":"viewerUrn", "type":["null", "string"], "default": null,
+         "doc":"The LinkedIn URN of the user initiating the action.  For other applications like Slideshare, this should be filled in when the LinkedIn member URN is actually known.  The LinkedIn member URN would be known, for example, when the user has linked their Slideshare account with their LinkedIn account."},
+        {"name":"applicationViewerUrn", "type":["null", "string"], "default": null,
+         "doc":"The Application URN of the user initiating the action.  This URN identifies the member within the particular application that the member is using, which may or may not be LinkedIn.  If the user is interacting with LinkedIn then this should be the LinkedIn URN, the same as viewerUrn.  If the member is interacting with a different site, such as Slideshare, then this should be the URN identifying the member in that site."},
+        {"name":"time", "type":"long", "doc":"The time of the event"},
+        {"name":"server", "type":"string", "doc":"The name of the server"},
+        {"name":"service", "type":"string", "doc":"The name of the service. Synonymous to the com.linkedin.events.monitoring.EventHeader#container field."},
+        {
+          "name": "environment",
+          "type": ["string", "null"],
+          "default": "",
+          "doc": "The environment the service is running in"
+        },
+        {"name":"guid",
+         "type":{"name": "Guid", "type":"fixed", "size":16},
+         "doc":"A unique identifier for the message"},
+        {
+          "name": "treeId",
+          "type": [
+            "null",
+            {
+              "type": "fixed",
+              "name": "fixed_16",
+              "size": 16
+            }
+          ],
+          "default": null,
+          "doc": "Service call tree uuid"
+        },
+        {
+          "name": "requestId",
+          "type": [
+            "null",
+            "int"
+          ],
+          "default": null,
+          "doc": "Service call request id"
+        },
+        {
+          "name": "impersonatorId",
+          "type": [
+            "null",
+            "string"
+          ],
+          "default": null,
+          "doc": "this is the ID of the CS Agent or Application acting on the users behalf"
+        },
+        {
+          "name": "version",
+          "type": ["null", "string"],
+          "default": null,
+          "doc": "Synonymous to the com.linkedin.events.monitoring.EventHeader#version field. The version that the service which emitted this event was at. For services in multiproducts, this usually comes in the form of {major}.{minor}.{micro} (eg. 0.1.2), however for network services, the version follows a format like so: 0.0.2000-RC8.35047"
+        },
+        {
+          "name": "instance",
+          "type": ["null", "string"],
+          "default": null,
+          "doc": "Synonymous to the com.linkedin.events.monitoring.EventHeader#instance field. The instance ID of the service (eg. i001)"
+        },
+        {
+          "name": "appName",
+          "type": ["null", "string"],
+          "default": null,
+          "doc": "Synonymous to the com.linkedin.events.monitoring.EventHeader#service field. Named 'appName' here since this is what this field actually represents, and 'service' is already used. This is also synonymous to 'appName' in Play and network apps, where on a typical page there would be a <meta name=appName content=biz> tag. For network apps, this would be the container name without the '-tomcat' suffix. So for 'profile-tomcat', it would just be 'profile'. For Play! services, it would just be the container name, such as 'polls-frontend'. For additional information, please see the wiki at go/appname"
+        },
+        {
+          "name": "testId",
+          "type": [
+            "null",
+            "string"],
+          "default": null,
+          "doc": "A client provided ID that uniquely identifies a particular execution of a test case.  This ID is provided by clients through an ENG_TEST_ID cookie.  The Selenium test framework automatically sets this cookie for each request.  This will be null when there is no ENG_TEST_ID provided.  See https://iwww.corp.linkedin.com/wiki/cf/display/ENGS/Selenium+Framework+Architecture+Documentation for more details on the test framework.  See https://iwww.corp.linkedin.com/wiki/cf/display/ENGS/Improving+Automated+Testability+of+Tracking+Events for details on the motiviation behind adding this test ID to the header and how it is used."
+    } ] } ] },
+    {"name": "request", "type": [ "null", {
+      "type": "record",
+      "name": "Request",
+      "fields": [
+        {"name": "method",
+         "type": {"type": "enum",
+                 "symbols": ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT", "EXTENSION"],
+                 "name": "Method"}},
+        {"name": "extensionMethod", "type": ["null", "string"], "doc": "The method string used if type is set to EXTENSION"},
+        {"name": "protocol",
+         "type": {"type": "enum",
+                 "symbols": ["HTTP", "HTTPS"],
+                 "name": "Protocol"}},
+        {"name": "ipAsBytes", "type": [ "null", {
+          "type": "fixed",
+          "size": 16,
+          "name": "IPAddress",
+          "doc": "A 16-byte array representing the IPv6 address. If the client uses IPv4, this field is the IPv4-mapped IPv6 address"
+        } ] },
+        {"name": "domain", "type": ["null", "string"], "doc": "The domain the request was sent to"},
+        {"name": "path", "type": "string", "doc": "The HTTP path of the request"},
+        {"name": "query", "type": ["null", "string"], "doc": "Whitelisted query parameters from the request"},
+        {"name": "referer", "type": ["null", "string"], "doc": "The referer URL in the request"},
+        {"name": "userAgent", "type": ["null", "string"], "doc": "The user agent of the request"},
+        {"name": "xForwardedFor", "type": ["null", "string"], "doc": "X-Forwarded-For header"},
+        {"name": "accept", "type": ["null", "string"], "doc": "User agent's accept content types"},
+        {"name": "acceptEncoding", "type": ["null", "string"], "doc": "User agent's accept encodings"},
+        {"name": "acceptLanguage", "type": ["null", "string"], "doc": "User agent's accept languages"},
+        {"name": "contentLength", "type": ["null", "int"], "doc": "Content length in the request (present in POSTs)"},
+        {"name": "bcookie", "type": ["null", "string"], "doc": "Raw bcookie in the request"},
+        {"name": "bsCookieInfo", "type": [ "null", {
+          "type": "record",
+          "name": "BsCookieInfo", "fields": [
+            {"name": "issueTime", "type": "long", "doc": "Issue timestamp in the cookie"},
+            {"name": "browserId", "type": "string", "doc": "The browser id field of the cookie"}
+          ],
+          "doc": "Proxy info for user's bscookie"
+        } ] },
+        {"name": "xLiTrack", "type": ["null", "string"], "doc": "Tracking header sent by mobile clients"},
+        {"name": "contentType", "type": ["null", "string"], "doc": "Applicable in case of POST requests"},
+        {"name": "cookies", "type": ["null", {"type": "array", "items": "string"}], "doc": "Names of cookies submitted"},
+        {"name": "encryptedFullUrl", "type": ["null", "string"], "default": null, "doc": "Encrypted full URL of request"},
+        {"name": "encryptedBody", "type": ["null", "string"], "default": null, "doc": "Encrypted body of request"},
+        {"name": "isXSS", "type": "boolean", "default": false, "doc": "Flag set if request contains potential xss"}
+      ]
+    } ] },
+    {"name": "response", "type": [ "null", {
+      "type": "record",
+      "name": "Response",
+      "fields": [
+        {"name": "statusCode", "type": "int", "doc": "Status code"},
+        {"name": "serverDuration", "type": "long", "doc": "Time taken in milliseconds by server to generate the response"},
+        {"name": "bcookie", "type": ["null", "string"], "doc": "Bcookie being set"},
+        {"name": "bsCookieInfo", "type": ["null", "BsCookieInfo"], "doc": "Bscookie being set"},
+        {"name": "xLiUuid", "type": ["null", "string"], "doc": "Unique identifier of the request"},
+        {"name": "contentType", "type": ["null", "string"], "doc": "Type of content returned"},
+        {"name": "contentLength", "type": ["null", "int"], "doc": "Size of response body; absent if returning chunked"},
+        {"name": "transferEncoding", "type": ["null", "string"], "doc": "Encoding of the body, if set"},
+        {"name": "cookiesSet", "type": ["null", { "type": "array", "items": {
+          "type": "record",
+          "name": "ResponseCookie",
+          "doc": "Describes a cookie being specified in a response",
+          "fields": [
+            {"name": "name", "type": "string", "doc": "Name of cookie"},
+            {"name": "domain", "type": ["null", "string"], "doc": "Domain on which cookie is set"},
+            {"name": "maxAge", "type": ["null", "int"], "doc": "TTL in seconds of cookie"},
+            {"name": "expires", "type": ["null", "int"], "doc": "Absolute timestamp in seconds of expiry of cookie"},
+            {"name": "path", "type": ["null", "string"], "doc": "Path on which cookie is set"},
+            {"name": "version", "type": ["null", "string"], "doc": "Version of cookie"},
+            {"name": "isSecure", "type": "boolean", "doc": "True if secure attribute set"},
+            {"name": "isHttpOnly", "type": "boolean", "doc": "True if HTTP only attribute set"}
+          ]
+        } } ], "doc": "Cookies being set" },
+        {"name": "cookiesDeleted", "type": ["null", {"type": "array", "items": "ResponseCookie"}], "doc": "Cookies being deleted"}
+      ]
+    } ] }
   ]
 }
