@@ -17,6 +17,9 @@ Target = RequestEvent.h RequestEventSchema.h KafkaProducer.so
 
 all: $(Target)
 
+# Generator the cpp file from avro. the sed line removes the last comma of a enum member.
+# If you specify -std=c++0x without -pedantic, the compiler is ok. double $$ is needed
+# because bash expands $!.
 %.h : %.avsc
 	avrogencpp -i $< -o $@
 	sed -i ':a;N;$$!ba;s/,\n};/\n};/g' $@
