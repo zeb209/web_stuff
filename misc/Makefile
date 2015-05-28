@@ -5,7 +5,7 @@
 CC=gcc
 CXX=g++
 
-SUBDIR = protobuf
+SUBDIR = protobuf avro
 Target=epoll-example
 
 all: $(Target) $(SUBDIR)
