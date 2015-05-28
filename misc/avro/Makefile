@@ -29,4 +29,4 @@ imaginary.hh:imaginary.json
 
 .phony: clean
 clean:
-	-rm -rf *~ $(Target) cpx.hh imaginary.hh
+	-rm -rf *~ $(Target) cpx.hh imaginary.hh test.bin
