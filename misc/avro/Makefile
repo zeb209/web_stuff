@@ -12,8 +12,12 @@ AVRO_INCLUDE=$(AVRO_ROOT)/include
 AVRO_LIB=$(AVRO_ROOT)/lib
 
 Target=generated load-schema custom
+SUBDIR=validate-avro
 
-all:$(Target)
+all:$(Target) $(SUBDIR)
+
+$(SUBDIR)::
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 
 generated: generated.cc cpx.hh
 custom: custom.cc cpx.hh imaginary.hh
@@ -28,5 +32,6 @@ imaginary.hh:imaginary.json
 	$(AVROGEN) -i $< -o $@ -n c
 
 .phony: clean
-clean:
+
+clean: $(SUBDIR)
 	-rm -rf *~ $(Target) cpx.hh imaginary.hh test.bin
