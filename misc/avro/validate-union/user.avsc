@@ -1,0 +1,13 @@
+{
+        "type": "record",
+        "name": "User",
+        "fields": [
+          {"name": "username", "type": "string"},
+          {"name": "x", "type": [ "null",
+                                  {"type": "record", "name": "Test", "fields": [ {"name":"a", "type": "int"} ] }
+                                ]
+          },
+          {"name": "gender",
+           "type": ["null", "string", {"type": "record", "name": "TT", "fields": [ {"name": "b", "type": "double" }, {"name":"c", "type": "string"}]}]
+          }
+]}
