@@ -12,7 +12,7 @@ AVRO_INCLUDE=$(AVRO_ROOT)/include
 AVRO_LIB=$(AVRO_ROOT)/lib
 
 Target=generated load-schema custom
-SUBDIR=validate-avro
+SUBDIR=validate-avro validate-union
 
 all:$(Target) $(SUBDIR)
 

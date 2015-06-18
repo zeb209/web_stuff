@@ -5,7 +5,7 @@ AVRO_TOOLS=$(AVRO)/avro-tools-1.7.7.jar
 .phony: validate
 
 # validate a json against a schema
-validate:user.frag user.fragjson
+validate:user.frag user.fragjson URE.frag URE.fragjson
 
 # json to frag. $(word 2,$^) is the second prerequisite.
 %.frag:%.json %.avsc

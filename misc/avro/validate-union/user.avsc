@@ -9,5 +9,17 @@
           },
           {"name": "gender",
            "type": ["null", "string", {"type": "record", "name": "TT", "fields": [ {"name": "b", "type": "double" }, {"name":"c", "type": "string"}]}]
-          }
+          },
+   {"name": "header",
+     "type": ["null", {
+       "name": "ureheader",
+       "type": "record",
+       "fields" : [
+         {"name":"memberId", "type":"int" },
+         {"name":"testId",   "type":"string"}
+       ]
+      }
+    ]
+   }
+ 
 ]}

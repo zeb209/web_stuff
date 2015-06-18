@@ -1,0 +1,7 @@
+{
+  "type": "record",
+  "name": "UserRequestEvent",
+  "fields": [
+    {"name": "header",
+     "type": ["null", {"name": "ureheader", "type": "record", "fields" : [{"name":"memberId", "type":"int"}]} ]
+}]}

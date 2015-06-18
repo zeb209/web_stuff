@@ -1,4 +1,4 @@
-{"username": "john", "x": {"Test": {"a":1}}, "gender": null}
-{"username": "john", "x": {"Test": {"a":1}}, "gender": {"string": "male"}}
-{"username": "john", "x": {"Test": {"a":1}}, "gender": {"TT": {"b": 1.2, "c": "f"}}}
+{"username": "john", "x": {"Test": {"a":1}}, "gender": null, "header": {"ureheader": {"memberId": 23, "testId": "null"} }}
+{"username": "john", "x": {"Test": {"a":1}}, "gender": {"string": "male"}, "header": null}
+{"username": "john", "x": {"Test": {"a":1}}, "gender": {"TT": {"b": 1.2, "c": "f"}}, "header": null}
 
