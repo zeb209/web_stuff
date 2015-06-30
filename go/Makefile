@@ -7,7 +7,7 @@ GO=/usr/bin/go
 GCFLAGS=-gcflags "-N -l"
 # "-ldflags -w" omits the debug info for go
 
-Target=originServer sendRequest
+Target=originServer sendRequest customRoundTripper printHttpRequest reverseProxy reverseProxyAll reverseProxyHttps
 
 all: $(Target)
 
