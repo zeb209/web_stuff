@@ -224,7 +224,7 @@ static int transactionCont(TSCont cont, TSEvent /*event*/, void *edata) {
 static int handleReadRequestHeader(TSCont /*cont*/, TSEvent /*event*/, void *edata) {
   TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
   // Internal requests, do nothing.
-  if (TSHttpIsInternalRequest(txn) == TS_SUCCESS) {
+  if (TSHttpTxnIsInternal(txn) == TS_SUCCESS) {
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }

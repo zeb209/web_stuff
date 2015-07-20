@@ -21,7 +21,7 @@ namespace {
 
   int handleReadRequestHeader(TSCont /*cont*/, TSEvent /*event*/, void *edata) {
     TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
-    if (TSHttpIsInternalRequest(txn) == TS_SUCCESS) {
+    if (TSHttpTxnIsInternal(txn) == TS_SUCCESS) {
       TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
       return 0;
     }
@@ -47,7 +47,7 @@ namespace {
   int handleReadResponseHeaderGlobal(TSCont /*cont*/, TSEvent /*event*/, void *edata) {
     TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
 
-    if (TSHttpIsInternalRequest(txn) == TS_SUCCESS) {
+    if (TSHttpTxnIsInternal(txn) == TS_SUCCESS) {
       TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
       return 0;
     }
