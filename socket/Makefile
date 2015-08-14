@@ -5,8 +5,8 @@
 CC=gcc
 CXX=g++
 
-SUBDIR = protobuf avro
-Target=
+SUBDIR = nweb
+Target=epoll-example getaddrinfo sockaddr
 
 all: $(Target) $(SUBDIR)
 

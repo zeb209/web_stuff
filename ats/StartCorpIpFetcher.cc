@@ -12,8 +12,7 @@ using namespace AtsPluginUtils;
 
 static int handleReadRequestHeader(TSCont /*cont*/, TSEvent /*event*/, void *edata) {
   TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
-  if (TSHttpTxnIsInternal(txn) == TS_SUCCESS)
-  {
+  if (TSHttpTxnIsInternal(txn) == TS_SUCCESS) {
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }
@@ -32,7 +31,8 @@ void TSPluginInit(int /*argc*/, const char */*argv*/[]) {
   info.vendor_name   = (char *)"LinkedIn";
   info.support_email = (char *)"bzeng@linkedin.com";
 
-  if (!TSPluginRegister (TS_SDK_VERSION_2_0 , &info)) {
+  // if (!TSPluginRegister (TS_SDK_VERSION_2_0 , &info)) {
+  if (!TSPluginRegister(&info)) {
     TSError ("Plugin registration failed. \n");
   }
 

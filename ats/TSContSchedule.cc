@@ -224,7 +224,7 @@ static int transactionCont(TSCont cont, TSEvent /*event*/, void *edata) {
 static int handleReadRequestHeader(TSCont /*cont*/, TSEvent /*event*/, void *edata) {
   TSHttpTxn txn = static_cast<TSHttpTxn>(edata);
   // Internal requests, do nothing.
-  if (TSHttpTxnIsInternal(txn) == TS_SUCCESS) {
+  if (TSHttpIsInternalRequest(txn) == TS_SUCCESS) {
     TSHttpTxnReenable(txn, TS_EVENT_HTTP_CONTINUE);
     return 0;
   }
@@ -262,7 +262,8 @@ void TSPluginInit(int /*argc*/, const char * /*argv*/[]) {
   info.plugin_name = (char *)"TSContSchedule";
   info.vendor_name = (char *)"LinkedIn Inc.";
   info.support_email = (char *)"bzeng@linkedin.com";
-  if (!TSPluginRegister(TS_SDK_VERSION_2_0, &info)) {
+  // if (!TSPluginRegister(TS_SDK_VERSION_2_0, &info)) {
+  if (!TSPluginRegister(&info)) {
     TSError("Plugin registration failed. \n");
   }
 

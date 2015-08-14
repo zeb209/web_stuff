@@ -64,7 +64,8 @@ void TSPluginInit(int /*argc*/, const char */*argv*/[]) {
   info.vendor_name   = (char *)"LinkedIn";
   info.support_email = (char *)"bzeng@linkedin.com";
 
-  if (!TSPluginRegister (TS_SDK_VERSION_2_0 , &info)) {
+  // if (!TSPluginRegister (TS_SDK_VERSION_2_0 , &info)) {
+  if (!TSPluginRegister(&info)) {
     TSError ("Plugin registration failed. \n");
   }
 

@@ -5,7 +5,7 @@
 # Hardcode the parallel build flags here.
 MAKEFLAGS=-j 4
 
-SUBDIR=ats go kafka misc
+SUBDIR=ats go kafka misc socket
 
 all: $(SUBDIR)
 
