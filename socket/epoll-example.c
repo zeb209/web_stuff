@@ -48,6 +48,7 @@ static int create_and_bind (char *port) {
     return -1;
   }
 
+  // Create a socket and bind it to a port.
   for (rp = result; rp != NULL; rp = rp->ai_next) {
     sfd = socket (rp->ai_family, rp->ai_socktype, rp->ai_protocol);
     if (sfd == -1) continue;
