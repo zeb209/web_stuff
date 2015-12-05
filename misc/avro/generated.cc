@@ -83,8 +83,10 @@ ERR_CODE serialize(SERIALIZE_TYPE sTy, ENCODE_TYPE eTy, const char *schema_file,
   e->init(*out);
   avro::encode(*e, c1);
 
+  // flush the file to disk.
   if (sTy == FILE_OUTPUT) out->flush();
 
+  // Now, we try to decode the encoded objects.
   std::auto_ptr<avro::InputStream> in;
   switch(sTy) {
   case MEMORY: in = avro::memoryInputStream(*out); break;
@@ -102,16 +104,18 @@ ERR_CODE serialize(SERIALIZE_TYPE sTy, ENCODE_TYPE eTy, const char *schema_file,
 
   c::cpx c2;
   avro::decode(*d, c2);
+
+  // Verify the values are equal.
   assert (equals(c1, c2));
   return SUCCESS;
 }
 
 
 int main() {
-  if (serialize(MEMORY, BINARY, "cpx.json", "cpx.out") != SUCCESS ||
-      serialize(MEMORY, JSON, "cpx.json", "cpx.out") != SUCCESS ||
-      serialize(FILE_OUTPUT, BINARY, "cpx.json", "cpx.out") != SUCCESS ||
-      serialize(FILE_OUTPUT, JSON,   "cpx.json", "cpx.out") != SUCCESS
+  if (/*serialize(MEMORY, BINARY, "cpx.json", "cpx.binmem") != SUCCESS ||
+      serialize(MEMORY, JSON, "cpx.json", "cpx.jsonmem") != SUCCESS ||
+      serialize(FILE_OUTPUT, BINARY, "cpx.json", "cpx.binfile") != SUCCESS ||*/
+      serialize(FILE_OUTPUT, JSON,   "cpx.json", "cpx.jsonfile") != SUCCESS
       )
     std::cerr << "Error\n";
   return 0;

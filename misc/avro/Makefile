@@ -11,7 +11,7 @@ AVRO_ROOT=/home/bzeng/big-data/avro/install
 AVRO_INCLUDE=$(AVRO_ROOT)/include
 AVRO_LIB=$(AVRO_ROOT)/lib
 
-Target=generated load-schema custom
+Target=generated load-schema custom json_encode_example
 SUBDIR=validate-avro validate-union
 
 all:$(Target) $(SUBDIR)
@@ -34,4 +34,4 @@ imaginary.hh:imaginary.json
 .phony: clean
 
 clean: $(SUBDIR)
-	-rm -rf *~ $(Target) cpx.hh imaginary.hh test.bin
+	-rm -rf *~ $(Target) cpx.hh imaginary.hh test.bin cpx.binfile cpx.jsonfile cpx.out
