@@ -6,11 +6,14 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include <avro/Compiler.hh>
 #include <avro/Encoder.hh>
+#include <avro/Decoder.hh>
 #include <avro/Stream.hh>
 #include <avro/ValidSchema.hh>
+#include <avro/Generic.hh>
 
 #include "cpx.hh"
 using namespace std;
@@ -136,7 +139,43 @@ void fromAvroToJsonString2() {
   }
 }
 
+// Given a json string and avro schema, generate the avro object.
+// For java version: http://stackoverflow.com/questions/27559543/json-string-to-java-object-avro
+void fromJsonToAvro(string json, string schema) {
+  std::auto_ptr<avro::InputStream> in =
+    avro::memoryInputStream((const uint8_t*)&json[0], json.size());
+
+  // Compile the schema string.
+  avro::ValidSchema validSchema;
+  std::istringstream ins(schema);
+
+  try {
+    avro::compileJsonSchema(ins, validSchema);
+  } catch (const exception &e) {
+    return;
+  }
+
+  avro::DecoderPtr d = avro::jsonDecoder(validSchema);
+  avro::GenericDatum datum(validSchema);
+
+  d->init(*in);
+  avro::decode(*d, datum);
+
+  // Now encrypt the data into avro.
+  std::auto_ptr<avro::OutputStream> out =
+    avro::fileOutputStream("json_encode_example.out", 4096);
+  avro::EncoderPtr e = avro::jsonEncoder(validSchema);
+  e->init(*out);
+  avro::encode(*e, datum);
+  out->flush();
+}
+
 int main() {
   // testStreamWriter();
   fromAvroToJsonString2();
+
+  // Test the function to generate avro objects from json string.
+  string json = "{\"username\":\"miguno\",\"tweet\":\"Rock: Nerf paper, scissors is fine.\",\"timestamp\": 1366150681 }";
+  string schema ="{ \"type\" : \"record\", \"name\" : \"twitter_schema\", \"namespace\" : \"com.miguno.avro\", \"fields\" : [ { \"name\" : \"username\", \"type\" : \"string\", \"doc\"  : \"Name of the user account on Twitter.com\" }, { \"name\" : \"tweet\", \"type\" : \"string\", \"doc\"  : \"The content of the user's Twitter message\" }, { \"name\" : \"timestamp\", \"type\" : \"long\", \"doc\"  : \"Unix epoch time in seconds\" } ], \"doc:\" : \"A basic schema for storing Twitter messages\" }";
+  fromJsonToAvro(json, schema);
 }

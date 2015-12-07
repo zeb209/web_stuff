@@ -120,3 +120,29 @@ int main() {
     std::cerr << "Error\n";
   return 0;
 }
+
+/*
+static byte[] fromJasonToAvro(String json, String schemastr) throws Exception {
+
+InputStream input = new ByteArrayInputStream(json.getBytes());
+DataInputStream din = new DataInputStream(input);
+
+Schema schema = Schema.parse(schemastr);
+
+Decoder decoder = DecoderFactory.get().jsonDecoder(schema, din);
+
+DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+Object datum = reader.read(null, decoder);
+
+GenericDatumWriter<Object> w = new GenericDatumWriter<Object>(schema);
+ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+Encoder e = EncoderFactory.get().binaryEncoder(outputStream, null);
+
+w.write(datum, e);
+e.flush();
+
+return outputStream.toByteArray();
+}
+
+*/
